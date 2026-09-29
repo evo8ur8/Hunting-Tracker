@@ -61,6 +61,37 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
 .empty{color:var(--muted);text-align:center;padding:24px 10px}
 .note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:12px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;position:sticky;top:0;z-index:5;background:#0f140f;padding:8px;border:1px solid var(--border);border-radius:14px}
+.tab{margin:0;background:transparent;color:var(--muted);border:none;font-weight:800;font-size:17px;padding:13px;cursor:pointer}
+.tab.active{background:var(--accent);color:#10150d}
+.page{max-width:680px;margin:0 auto}
+.page.wide{max-width:900px}
+.toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 14px}
+.toggle button{margin:0;padding:10px;font-size:15px;background:var(--panel2);color:var(--muted);border:1px solid var(--border);font-weight:700;cursor:pointer}
+.toggle button.on{background:#435534;color:var(--accent2);border-color:var(--accent)}
+.weeknav{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center;margin-bottom:6px}
+.weeknav button{margin:0;padding:11px 0;font-size:20px;background:var(--panel2);color:var(--text);border:1px solid var(--border);font-weight:800;cursor:pointer}
+.weeknav .label{text-align:center;font-weight:800;font-size:17px}
+.thisweek{width:auto;margin:0 auto 12px;display:block;padding:7px 14px;font-size:13px;background:transparent;color:var(--accent2);border:1px solid var(--border);cursor:pointer}
+.daycard{border:1px solid var(--border);border-left:6px solid var(--accent);background:#202a20;border-radius:13px;padding:12px 13px;margin-bottom:10px}
+.daycard.mid{border-left-color:#d1b04a}
+.daycard.full{border-left-color:var(--danger)}
+.daycard.isToday{box-shadow:0 0 0 1px var(--accent2)}
+.daycard.past{opacity:.6}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dayname{font-weight:800;font-size:17px}
+.dayname .today{background:var(--accent);color:#10150d;border-radius:999px;font-size:11px;padding:3px 8px;margin-left:8px}
+.opencount{font-size:13px;color:var(--muted)}
+.brow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2f3b2d;margin-top:8px}
+.brow:first-of-type{margin-top:10px}
+.brow .who{font-weight:800;font-size:15px}
+.brow .where{color:var(--muted);font-size:14px}
+.brow .x{width:auto;margin:0;padding:5px 9px;font-size:12px;background:transparent;color:#e9aaa2;border:1px solid #70443e;cursor:pointer}
+.bookday{width:auto;margin:10px 0 0;padding:8px 14px;font-size:14px;background:var(--panel2);color:var(--accent2);border:1px solid var(--border);font-weight:700;cursor:pointer}
+.noone{color:var(--muted);font-size:14px;margin-top:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:12px;margin:2px 0 14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.filter{grid-template-columns:1fr}h1{font-size:23px}}
 @media(max-width:420px){.choices{grid-template-columns:1fr}}
 </style>
@@ -74,9 +105,13 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
   <div id="status" class="status">Connecting…</div>
 </header>
 
-<div class="grid">
+<div class="tabs" role="tablist">
+  <button class="tab active" id="tabBtnBook" onclick="showTab('book')">📅 Book</button>
+  <button class="tab" id="tabBtnSchedule" onclick="showTab('schedule')">📋 Schedule</button>
+</div>
 
-<div>
+<!-- ========== BOOK TAB ========== -->
+<div id="tabBook" class="page">
   <section class="card">
     <h2>Book a Hunt</h2>
 
@@ -107,19 +142,41 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
   </section>
 </div>
 
-<div>
+<!-- ========== SCHEDULE TAB ========== -->
+<div id="tabSchedule" class="page wide" style="display:none">
   <section class="card">
     <h2>Who's Hunting</h2>
-    <div class="filter">
-      <input id="filterDate" type="date" onchange="render()" aria-label="Show one day">
-      <select id="filterHunter" onchange="render()" aria-label="Show one hunter"></select>
+    <div class="toggle">
+      <button id="viewWeekBtn" class="on" onclick="setView('week')">Week</button>
+      <button id="viewListBtn" onclick="setView('list')">Full list</button>
     </div>
-    <label class="check"><input type="checkbox" id="showPast" onchange="render()"> Also show past hunts</label>
-    <div id="schedule"></div>
+
+    <div id="weekView">
+      <div class="weeknav">
+        <button onclick="shiftWeek(-1)" aria-label="Previous week">‹</button>
+        <div id="weekLabel" class="label"></div>
+        <button onclick="shiftWeek(1)" aria-label="Next week">›</button>
+      </div>
+      <button class="thisweek" onclick="thisWeek()">Jump to this week</button>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>Plenty open</span>
+        <span><i style="background:#d1b04a"></i>Filling up</span>
+        <span><i style="background:var(--danger)"></i>Almost full</span>
+      </div>
+      <div id="weekDays"></div>
+    </div>
+
+    <div id="listView" style="display:none">
+      <div class="filter">
+        <input id="filterDate" type="date" onchange="render()" aria-label="Show one day">
+        <select id="filterHunter" onchange="render()" aria-label="Show one hunter"></select>
+      </div>
+      <label class="check"><input type="checkbox" id="showPast" onchange="render()"> Also show past hunts</label>
+      <div id="schedule"></div>
+    </div>
   </section>
 </div>
 
-</div>
 </div>
 
 <script>
@@ -149,7 +206,7 @@ async function loadBookings(){
     const d = await r.json();
     bookings = d ? Object.entries(d).map(([id,v])=>({id,...v})) : [];
     setStatus("✓ Live — updated " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), false);
-    render(); renderChoices();
+    render(); renderChoices(); renderWeek();
     return true;
   }catch(e){
     setStatus("⚠ Can't reach the shared list. Check your internet connection and pull to refresh.", true);
@@ -284,10 +341,81 @@ async function clearPast(){
   }catch(e){ alert("Couldn't remove them. Check your internet connection and try again."); }
 }
 
+
+/* ===== TABS & WEEK VIEW ===== */
+let weekStart = startOfWeek(todayStr());
+
+function startOfWeek(str){
+  const d=new Date(str+"T12:00:00"); d.setDate(d.getDate()-d.getDay()); return ymd(d);
+}
+function ymd(d){ const m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0"); return d.getFullYear()+"-"+m+"-"+day; }
+function addDays(str,n){ const d=new Date(str+"T12:00:00"); d.setDate(d.getDate()+n); return ymd(d); }
+const shortDate = s => new Date(s+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+
+function showTab(t){
+  $("tabBook").style.display = t==="book" ? "" : "none";
+  $("tabSchedule").style.display = t==="schedule" ? "" : "none";
+  $("tabBtnBook").classList.toggle("active", t==="book");
+  $("tabBtnSchedule").classList.toggle("active", t==="schedule");
+  window.scrollTo(0,0);
+  if(t==="schedule") renderWeek();
+}
+function setView(v){
+  $("weekView").style.display = v==="week" ? "" : "none";
+  $("listView").style.display = v==="list" ? "" : "none";
+  $("viewWeekBtn").classList.toggle("on", v==="week");
+  $("viewListBtn").classList.toggle("on", v==="list");
+}
+function shiftWeek(n){ weekStart=addDays(weekStart,7*n); renderWeek(); }
+function thisWeek(){ weekStart=startOfWeek(todayStr()); renderWeek(); }
+
+function openStands(date){
+  /* a stand counts as "used up" if all-day, or both morning and afternoon are taken */
+  const day=bookings.filter(b=>b.date===date);
+  return locations.filter(l=>{
+    const mine=day.filter(b=>b.location===l);
+    if(mine.some(b=>b.time==="All Day")) return false;
+    return !(mine.some(b=>b.time==="Morning") && mine.some(b=>b.time==="Afternoon"));
+  }).length;
+}
+
+function renderWeek(){
+  $("weekLabel").textContent = shortDate(weekStart)+" – "+shortDate(addDays(weekStart,6));
+  const today=todayStr(); let html="";
+  for(let i=0;i<7;i++){
+    const d=addDays(weekStart,i);
+    const list=bookings.filter(b=>b.date===d).sort((a,b)=>times.indexOf(a.time)-times.indexOf(b.time)||a.location.localeCompare(b.location));
+    const open=openStands(d), total=locations.length;
+    const cls = open<=3 ? "full" : open<=7 ? "mid" : "";
+    const past = d<today;
+    const label = new Date(d+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+    html+=`<div class="daycard ${cls} ${d===today?"isToday":""} ${past?"past":""}">
+      <div class="dayhead">
+        <div class="dayname">${esc(label)}${d===today?'<span class="today">Today</span>':""}</div>
+        <div class="opencount">${open===total?"All stands open":open+" of "+total+" stands open"}</div>
+      </div>`;
+    if(!list.length){
+      html+=`<div class="noone">No one is hunting yet.</div>`;
+    }else{
+      html+=list.map(b=>`<div class="brow">
+        <div><div class="who">${esc(b.hunter)}</div><div class="where">🦌 ${esc(b.location)}</div></div>
+        <div class="right"><span class="badge">${esc(b.time)}</span>
+        <br><button class="x" style="margin-top:6px" onclick="removeBooking('${esc(b.id)}')">Remove</button></div>
+      </div>`).join("");
+    }
+    if(!past) html+=`<button class="bookday" onclick="bookThisDay('${d}')">+ Book this day</button>`;
+    html+=`</div>`;
+  }
+  $("weekDays").innerHTML=html;
+}
+function bookThisDay(d){
+  $("date").value=d; selLocation=null; hideMsg(); renderChoices(); showTab("book");
+}
+
 /* ===== START ===== */
 $("date").value=todayStr();
 $("filterHunter").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
-renderChoices(); render();
+renderChoices(); render(); renderWeek();
 loadBookings();
 setInterval(loadBookings,20000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) loadBookings(); });
