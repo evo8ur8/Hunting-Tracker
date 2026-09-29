@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunting Stand Organizer</title>
+<style>
+:root{
+  --bg:#101510; --panel:#1b241b; --panel2:#222d22; --text:#f1f3ed; --muted:#b5beb2;
+  --accent:#8fae63; --accent2:#c5d89a; --danger:#d86b5c; --border:#3b4738; --taken:#3a2b28;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#0c100d,#172017);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:1050px;margin:auto;padding:16px}
+header{background:linear-gradient(145deg,#273626,#182018);border:1px solid var(--border);
+  border-radius:18px;padding:20px;margin-bottom:16px}
+h1{margin:0 0 4px;font-size:27px}
+.subtitle{color:var(--muted);margin:0}
+.status{font-size:12px;margin-top:10px;color:var(--muted)}
+.status.bad{color:#ffb3a9}
+.grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start}
+.card{background:rgba(27,36,27,.96);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 6px}
+.step{color:var(--accent2);font-weight:700;font-size:15px;margin:20px 0 8px}
+.step:first-of-type{margin-top:12px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 8px}
+input,select,button{width:100%;border-radius:10px;border:1px solid var(--border);padding:13px;font-size:16px;font-family:inherit}
+input,select{background:#101610;color:var(--text)}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.choice{background:#101610;color:var(--text);border:1px solid var(--border);border-radius:11px;
+  padding:11px 10px;min-height:52px;margin:0;font-size:15px;font-weight:650;text-align:left;cursor:pointer}
+.choice small{display:block;font-weight:500;font-size:12px;color:var(--muted);margin-top:2px}
+.choice:hover{border-color:var(--accent)}
+.choice.selected{background:#435534;border-color:var(--accent);color:var(--accent2);box-shadow:inset 0 0 0 1px var(--accent)}
+.choice.taken{background:var(--taken);border-color:#6a443e;color:#e9b8b0;cursor:not-allowed;opacity:.85}
+.choice.taken small{color:#e9b8b0}
+.choice:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.timebar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.timebar .choice{text-align:center;justify-content:center}
+button.main{margin-top:20px;background:var(--accent);color:#10150d;border:none;font-weight:800;font-size:18px;padding:16px;cursor:pointer}
+button.main:disabled{opacity:.5;cursor:default}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);cursor:pointer;font-weight:700}
+button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;cursor:pointer;font-weight:700}
+.msg{display:none;padding:12px;border-radius:10px;margin-top:14px;font-size:14px;line-height:1.4}
+.msg.err{background:#4a2925;border:1px solid #8a4a41;color:#ffd8d2}
+.msg.warn{background:#463d1f;border:1px solid #8a7a3a;color:#f5e6a8}
+.msg.ok{background:#25401f;border:1px solid #4f8a41;color:#d4f5c9}
+.filter{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.check{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;margin-bottom:12px}
+.check input{width:22px;height:22px;padding:0}
+.day{font-weight:800;font-size:16px;color:var(--accent2);margin:16px 0 8px}
+.day .today{background:var(--accent);color:#10150d;border-radius:999px;font-size:11px;padding:3px 8px;margin-left:8px}
+.booking{border:1px solid var(--border);background:#202a20;border-radius:13px;padding:12px 13px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+.booking .who{font-weight:800;font-size:16px}
+.booking .where{color:var(--muted);font-size:14px;margin-top:2px}
+.badge{background:#435534;color:var(--accent2);padding:4px 9px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;display:inline-block}
+.right{text-align:right}
+.remove{width:auto;padding:6px 10px;margin-top:8px;font-size:12px;background:transparent;color:#e9aaa2;border:1px solid #70443e;cursor:pointer}
+.empty{color:var(--muted);text-align:center;padding:24px 10px}
+.note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.filter{grid-template-columns:1fr}h1{font-size:23px}}
+@media(max-width:420px){.choices{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>🦌 Hunting Stand Organizer</h1>
+  <p class="subtitle">Pick a day, pick your name, pick a stand. Everyone sees the same list.</p>
+  <div id="status" class="status">Connecting…</div>
+</header>
+
+<div class="grid">
+
+<div>
+  <section class="card">
+    <h2>Book a Hunt</h2>
+
+    <div class="step">1. What day?</div>
+    <input id="date" type="date">
+
+    <div class="step">2. Who are you?</div>
+    <div id="hunterChoices" class="choices"></div>
+
+    <div class="step">3. Morning, afternoon, or all day?</div>
+    <div id="timeChoices" class="timebar"></div>
+
+    <div class="step">4. Which stand?</div>
+    <p class="hint">Red stands are already taken for that day and time.</p>
+    <div id="locationChoices" class="choices"></div>
+
+    <div id="msg" class="msg" role="status"></div>
+    <button id="bookBtn" class="main" onclick="bookHunt()">Book This Hunt</button>
+  </section>
+
+  <section class="card">
+    <h2>Backup &amp; Cleanup</h2>
+    <div class="actions">
+      <button class="secondary" onclick="exportCSV()">Download list</button>
+      <button class="danger" onclick="clearPast()">Remove old hunts</button>
+    </div>
+    <p class="note">“Remove old hunts” only deletes bookings from days that have already passed.</p>
+  </section>
+</div>
+
+<div>
+  <section class="card">
+    <h2>Who's Hunting</h2>
+    <div class="filter">
+      <input id="filterDate" type="date" onchange="render()" aria-label="Show one day">
+      <select id="filterHunter" onchange="render()" aria-label="Show one hunter"></select>
+    </div>
+    <label class="check"><input type="checkbox" id="showPast" onchange="render()"> Also show past hunts</label>
+    <div id="schedule"></div>
+  </section>
+</div>
+
+</div>
+</div>
+
+<script>
+/* ===== SHARED DATABASE (same Firebase project as before, new folder) ===== */
+const DB = "https://last-war-alliance-default-rtdb.firebaseio.com/huntingStands/bookings";
+
+/* ===== LISTS — edit names here ===== */
+const hunters = ["Joel Shank","Steven Edleblute","Hunter Turner","Trey Turner","Joe Bowers","Robert Bowers","Justin McGraw","BJ Williams"];
+const locations = ["Power Line Stand","Dad's Ladder","Crooked Stand","King Seat","Road Stand Near Swing Set","Top of the Hollow Stand","Double Tree Stand","First Tee","Second Tee","Powerline Near Stone House","One in the Pie","Above the Bowl","The 2 Man Over by the Field"];
+const times = ["All Day","Morning","Afternoon"];
+
+let bookings = [];
+let selHunter = null, selLocation = null, selTime = "All Day";
+try { selHunter = localStorage.getItem("huntingHunter"); if (!hunters.includes(selHunter)) selHunter = null; } catch(e){}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const todayStr = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fmtDate = s => new Date(s+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+const overlaps = (a,b) => a==="All Day" || b==="All Day" || a===b;
+
+/* ===== DATABASE CALLS ===== */
+async function loadBookings(){
+  try{
+    const r = await fetch(DB+".json");
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    bookings = d ? Object.entries(d).map(([id,v])=>({id,...v})) : [];
+    setStatus("✓ Live — updated " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), false);
+    render(); renderChoices();
+    return true;
+  }catch(e){
+    setStatus("⚠ Can't reach the shared list. Check your internet connection and pull to refresh.", true);
+    return false;
+  }
+}
+function setStatus(t,bad){ const s=$("status"); s.textContent=t; s.className="status"+(bad?" bad":""); }
+
+/* ===== FIND CONFLICTS ===== */
+function standTaken(loc,date,time){
+  return bookings.find(b=>b.date===date && b.location===loc && overlaps(b.time,time));
+}
+function hunterBusy(name,date,time){
+  return bookings.find(b=>b.date===date && b.hunter===name && overlaps(b.time,time));
+}
+
+/* ===== SCREEN PIECES ===== */
+function renderChoices(){
+  const date = $("date").value;
+  $("hunterChoices").innerHTML = hunters.map((h,i)=>
+    `<button type="button" class="choice ${selHunter===h?"selected":""}" data-t="h" data-i="${i}">${selHunter===h?"✓ ":""}${esc(h)}</button>`).join("");
+  $("timeChoices").innerHTML = times.map((t,i)=>
+    `<button type="button" class="choice ${selTime===t?"selected":""}" data-t="t" data-i="${i}">${esc(t)}</button>`).join("");
+  $("locationChoices").innerHTML = locations.map((l,i)=>{
+    const t = date ? standTaken(l,date,selTime) : null;
+    if(t) return `<button type="button" class="choice taken" disabled>${esc(l)}<small>Taken — ${esc(t.hunter)} (${esc(t.time)})</small></button>`;
+    return `<button type="button" class="choice ${selLocation===l?"selected":""}" data-t="l" data-i="${i}">${selLocation===l?"✓ ":""}${esc(l)}<small>Open</small></button>`;
+  }).join("");
+}
+document.addEventListener("click",e=>{
+  const b = e.target.closest("[data-t]"); if(!b) return;
+  const i = +b.dataset.i;
+  if(b.dataset.t==="h"){ selHunter=hunters[i]; try{localStorage.setItem("huntingHunter",selHunter)}catch(e){} }
+  if(b.dataset.t==="t"){ selTime=times[i]; if(selLocation && $("date").value && standTaken(selLocation,$("date").value,selTime)) selLocation=null; }
+  if(b.dataset.t==="l"){ selLocation=locations[i]; }
+  hideMsg(); renderChoices();
+});
+$("date").addEventListener("change",()=>{
+  if(selLocation && $("date").value && standTaken(selLocation,$("date").value,selTime)) selLocation=null;
+  hideMsg(); renderChoices();
+});
+
+function showMsg(kind,html){ const m=$("msg"); m.className="msg "+kind; m.innerHTML=html; m.style.display="block"; }
+function hideMsg(){ $("msg").style.display="none"; }
+
+/* ===== BOOK ===== */
+async function bookHunt(){
+  const date = $("date").value;
+  if(!date) return showMsg("err","Please pick a day.");
+  if(!selHunter) return showMsg("err","Please tap your name.");
+  if(!selLocation) return showMsg("err","Please tap a stand.");
+  if(date < todayStr()) return showMsg("err","That day has already passed. Pick today or a future day.");
+
+  const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking…";
+  try{
+    /* get the newest list first so two people can't grab the same stand */
+    if(!(await loadBookings())) throw new Error("offline");
+    const t = standTaken(selLocation,date,selTime);
+    if(t){
+      selLocation=null; renderChoices();
+      return showMsg("err",`⚠️ <strong>Too late — that stand was just taken</strong> by ${esc(t.hunter)} (${esc(t.time)}). Pick another stand.`);
+    }
+    const busy = hunterBusy(selHunter,date,selTime);
+    if(busy && !confirm(`${selHunter}, you already have ${busy.location} that day (${busy.time}). Book a second stand anyway?`)) return;
+
+    const r = await fetch(DB+".json",{method:"POST",body:JSON.stringify({date,hunter:selHunter,location:selLocation,time:selTime,created:Date.now()})});
+    if(!r.ok) throw new Error(r.status);
+    const bookedLoc = selLocation; selLocation=null;
+    await loadBookings();
+    showMsg("ok",`✓ <strong>Booked!</strong> ${esc(selHunter)} — ${esc(bookedLoc)}<br>${esc(fmtDate(date))} (${esc(selTime)})`);
+  }catch(e){
+    showMsg("err","Couldn't save your booking. Check your internet connection and try again.");
+  }finally{
+    btn.disabled=false; btn.textContent="Book This Hunt";
+  }
+}
+
+/* ===== REMOVE ===== */
+async function removeBooking(id){
+  const b = bookings.find(x=>x.id===id); if(!b) return;
+  if(!confirm(`Remove ${b.hunter} — ${b.location} on ${fmtDate(b.date)} (${b.time})?`)) return;
+  try{
+    const r = await fetch(`${DB}/${id}.json`,{method:"DELETE"});
+    if(!r.ok) throw new Error(r.status);
+    await loadBookings();
+  }catch(e){ alert("Couldn't remove it. Check your internet connection and try again."); }
+}
+
+/* ===== SCHEDULE ===== */
+function render(){
+  const fd=$("filterDate").value, fh=$("filterHunter").value, past=$("showPast").checked, today=todayStr();
+  const list = bookings.filter(b=>(!fd||b.date===fd)&&(!fh||b.hunter===fh)&&(past||fd||b.date>=today));
+  list.sort((a,b)=>(a.date+times.indexOf(a.time)+a.location).localeCompare(b.date+times.indexOf(b.time)+b.location));
+  const el=$("schedule");
+  if(!list.length){
+    el.innerHTML=`<div class="empty">No hunts booked${fd||fh?" for this view":" yet"}.<br>Use the form to book the first one.</div>`;
+    return;
+  }
+  let html="", last="";
+  list.forEach(b=>{
+    if(b.date!==last){
+      last=b.date;
+      html+=`<div class="day">${esc(fmtDate(b.date))}${b.date===today?'<span class="today">Today</span>':""}</div>`;
+    }
+    html+=`<div class="booking">
+      <div><div class="who">${esc(b.hunter)}</div><div class="where">🦌 ${esc(b.location)}</div></div>
+      <div class="right"><span class="badge">${esc(b.time)}</span><br>
+      <button class="remove" onclick="removeBooking('${esc(b.id)}')">Remove</button></div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+/* ===== BACKUP & CLEANUP ===== */
+function exportCSV(){
+  const rows=[["Date","Hunter","Stand","Time"]].concat(
+    [...bookings].sort((a,b)=>a.date.localeCompare(b.date)).map(b=>[b.date,b.hunter,b.location,b.time]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="hunting-bookings.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+async function clearPast(){
+  const old=bookings.filter(b=>b.date<todayStr());
+  if(!old.length) return alert("No old hunts to remove.");
+  if(!confirm(`Remove ${old.length} booking(s) from days that already passed?`)) return;
+  const patch={}; old.forEach(b=>patch[b.id]=null);
+  try{
+    const r=await fetch(DB+".json",{method:"PATCH",body:JSON.stringify(patch)});
+    if(!r.ok) throw new Error(r.status);
+    await loadBookings();
+  }catch(e){ alert("Couldn't remove them. Check your internet connection and try again."); }
+}
+
+/* ===== START ===== */
+$("date").value=todayStr();
+$("filterHunter").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
+renderChoices(); render();
+loadBookings();
+setInterval(loadBookings,20000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) loadBookings(); });
+</script>
+</body>
+</html>
