@@ -214,6 +214,29 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
   </section>
 
   <section class="card">
+    <h2>Walks &amp; Paths</h2>
+    <div class="step" style="margin-top:12px">Record or add a walk</div>
+    <select id="wHunter" aria-label="Who is walking"></select>
+    <button id="wStart" class="main" style="margin-top:10px" onclick="startWalk()">▶ Start Walk</button>
+    <button id="wStop" class="main" style="margin-top:10px;background:var(--danger);color:#fff;display:none" onclick="stopWalk()">■ Stop &amp; Save</button>
+    <div id="wLive" class="pv"></div>
+    <p class="note">While recording, keep this page open and the screen on. Phones pause web pages when the screen locks, which leaves gaps. For a long day, use a GPS app and upload the file below.</p>
+    <div class="step">Or upload a track (GPX file)</div>
+    <input id="wGpx" type="file" accept=".gpx,.xml,application/gpx+xml" multiple onchange="uploadGPX(this)">
+    <p class="hint" style="margin-top:8px">Export a GPX from onX, Gaia, AllTrails, Strava, or a watch app. Pick the hunter above first.</p>
+    <div class="step">Show on map</div>
+    <label class="check"><input type="checkbox" id="wShow" checked onchange="renderWalks()"> Show walked paths</label>
+    <div class="filter">
+      <select id="wFilterH" onchange="renderWalks()" aria-label="Hunter"></select>
+      <select id="wFilterD" onchange="renderWalks()" aria-label="Time range">
+        <option value="0">All time</option><option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option>
+      </select>
+    </div>
+    <div id="wLegend" class="legend"></div>
+    <div id="wList"></div>
+  </section>
+
+  <section class="card">
     <h2>Log a Sighting</h2>
     <div class="step">1. What did you see?</div>
     <div id="typeChoices" class="choices"></div>
@@ -495,9 +518,12 @@ function initMap(){
   baseSat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Imagery © Esri"});
   baseStreet=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"});
   baseSat.addTo(map);
-  standGroup=L.layerGroup().addTo(map); sightGroup=L.layerGroup().addTo(map);
+  standGroup=L.layerGroup().addTo(map); sightGroup=L.layerGroup().addTo(map); walkGroup=L.layerGroup().addTo(map);
   map.on("click",e=>{ if(pickMode){ const f=pickMode; pickMode=null; $("hintbar").style.display="none"; f({lat:e.latlng.lat,lng:e.latlng.lng}); }});
   $("sHunter").innerHTML='<option value="">Who saw it?</option>'+hunters.map(h=>`<option ${h===selHunter?"selected":""}>${esc(h)}</option>`).join("");
+  $("wHunter").innerHTML=$("sHunter").innerHTML.replace("Who saw it?","Who is walking?");
+  $("wFilterH").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
+  $("wLegend").innerHTML=hunters.map(h=>`<span><i style="background:${hColor(h)}"></i>${esc(h)}</span>`).join("");
   $("sCount").innerHTML=Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1} ${i?"animals":"animal"}</option>`).join("");
   $("sFilter").innerHTML='<option value="">All sightings</option>'+Object.keys(sTypes).map(t=>`<option>${t}</option>`).join("");
   renderTypeChoices();
@@ -520,9 +546,10 @@ function startPick(cb,text){
 
 async function loadMap(){
   try{
-    const [p,s]=await Promise.all([fetch(DBROOT+"/standPins.json").then(r=>r.json()),fetch(DBROOT+"/sightings.json").then(r=>r.json())]);
+    const [p,s,w]=await Promise.all([fetch(DBROOT+"/standPins.json").then(r=>r.json()),fetch(DBROOT+"/sightings.json").then(r=>r.json()),fetch(DBROOT+"/walks.json").then(r=>r.json())]);
     pins=p||{}; sightings=s?Object.entries(s).map(([id,v])=>({id,...v})).sort((a,b)=>b.when-a.when):[];
-    renderMap(); renderSightings();
+    walks=w?Object.entries(w).map(([id,v])=>({id,...v})).sort((a,b)=>b.when-a.when):[];
+    renderMap(); renderSightings(); renderWalks();
   }catch(e){ $("sList").innerHTML='<div class="empty">Can\'t reach the shared data. Check your internet connection.</div>'; }
 }
 function renderMap(){
@@ -628,6 +655,90 @@ async function openPhoto(id){
   catch(e){ $("photoInner").textContent="Couldn't load the photo."; }
 }
 function closePhoto(){ $("photoBox").style.display="none"; $("photoInner").innerHTML=""; }
+
+/* ===== WALKED PATHS ===== */
+const walkColors=["#ffd54a","#4fc3f7","#ff8a65","#ba68c8","#81c784","#f06292","#fff176","#90caf9"];
+let walks=[], walkGroup, rec=null, wakeLock=null;
+const hColor=h=>walkColors[Math.max(0,hunters.indexOf(h))%walkColors.length];
+function dist(a,b){const R=6371000,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+function pathLen(p){let d=0;for(let i=1;i<p.length;i++)d+=dist(p[i-1],p[i]);return d;}
+const miles=m=>(m/1609.34).toFixed(2)+" mi";
+function decimate(p,max=600){if(p.length<=max)return p;const k=p.length/max,o=[];for(let i=0;i<max;i++)o.push(p[Math.floor(i*k)]);o.push(p[p.length-1]);return o;}
+const enc=p=>p.map(q=>q[0].toFixed(5)+","+q[1].toFixed(5)).join(";");
+const dec=t=>t?t.split(";").map(x=>x.split(",").map(Number)):[];
+
+function startWalk(){
+  const h=$("wHunter").value;
+  if(!h) return alert("Choose who is walking first.");
+  if(!navigator.geolocation) return alert("This phone can't share its location.");
+  if(rec) return;
+  rec={hunter:h,start:Date.now(),pts:[],line:L.polyline([],{color:hColor(h),weight:5}).addTo(map),warned:false};
+  rec.id=navigator.geolocation.watchPosition(p=>{
+    if(p.coords.accuracy>40) return;
+    const q=[p.coords.latitude,p.coords.longitude], last=rec.pts[rec.pts.length-1];
+    if(last&&dist(last,q)<6) return;
+    rec.pts.push(q); rec.line.addLatLng(q); map.panTo(q); updateRec();
+  },()=>{ if(rec&&!rec.warned){rec.warned=true;alert("Having trouble getting a GPS signal. Make sure location is allowed for this page.");} },{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  if(navigator.wakeLock) navigator.wakeLock.request("screen").then(l=>wakeLock=l).catch(()=>{});
+  rec.timer=setInterval(updateRec,1000);
+  $("wStart").style.display="none"; $("wStop").style.display="";
+  $("map").scrollIntoView({behavior:"smooth",block:"center"}); updateRec();
+}
+function updateRec(){
+  if(!rec) return;
+  $("wLive").textContent=`● Recording — ${miles(pathLen(rec.pts))} · ${Math.floor((Date.now()-rec.start)/60000)} min · ${rec.pts.length} points. Keep the screen on.`;
+}
+document.addEventListener("visibilitychange",()=>{ if(rec&&!document.hidden&&navigator.wakeLock) navigator.wakeLock.request("screen").then(l=>wakeLock=l).catch(()=>{}); });
+async function stopWalk(){
+  if(!rec) return;
+  navigator.geolocation.clearWatch(rec.id); clearInterval(rec.timer);
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+  const r=rec; rec=null; map.removeLayer(r.line);
+  $("wStart").style.display=""; $("wStop").style.display="none"; $("wLive").textContent="";
+  if(r.pts.length<2) return alert("Not enough movement to save a walk.");
+  const note=prompt("Add a note for this walk (optional):","")||"";
+  const w={hunter:r.hunter,when:r.start,mins:Math.round((Date.now()-r.start)/60000),note:note.slice(0,200),pts:r.pts};
+  if(!(await saveWalk(w)) && confirm("Try saving the walk again?")) await saveWalk(w);
+}
+async function saveWalk(w){
+  const obj={hunter:w.hunter,when:w.when,mins:w.mins||0,note:w.note||"",dist:Math.round(pathLen(w.pts)),pts:enc(decimate(w.pts))};
+  try{ const r=await fetch(DBROOT+"/walks.json",{method:"POST",body:JSON.stringify(obj)}); if(!r.ok) throw 0; await loadMap(); return true; }
+  catch(e){ alert("Couldn't save the walk. Check your internet connection."); return false; }
+}
+async function uploadGPX(inp){
+  const h=$("wHunter").value;
+  if(!h){ alert("Choose who walked this track first."); inp.value=""; return; }
+  let n=0, last=null;
+  for(const f of inp.files){
+    try{
+      const x=new DOMParser().parseFromString(await f.text(),"text/xml");
+      let nodes=[...x.getElementsByTagName("trkpt")]; if(!nodes.length) nodes=[...x.getElementsByTagName("rtept")];
+      const pts=nodes.map(e=>[+e.getAttribute("lat"),+e.getAttribute("lon")]).filter(q=>isFinite(q[0])&&isFinite(q[1]));
+      if(pts.length<2){ alert(f.name+": no track found in this file."); continue; }
+      const t1=nodes[0].getElementsByTagName("time")[0], t2=nodes[nodes.length-1].getElementsByTagName("time")[0];
+      let when=t1?Date.parse(t1.textContent):NaN; if(!isFinite(when)) when=f.lastModified||Date.now();
+      const mins=t1&&t2?Math.round((Date.parse(t2.textContent)-when)/60000):0;
+      const nm=x.getElementsByTagName("name")[0];
+      if(await saveWalk({hunter:h,when,mins:mins>0?mins:0,note:(nm?nm.textContent:f.name).slice(0,100),pts})){ n++; last=pts; }
+    }catch(e){ alert(f.name+": couldn't read this file."); }
+  }
+  inp.value="";
+  if(n){ map.fitBounds(last,{padding:[30,30]}); $("map").scrollIntoView({behavior:"smooth",block:"center"}); alert("Added "+n+" track"+(n>1?"s":"")+" to the map."); }
+}
+const walkHTML=w=>`<b>${esc(w.hunter)}</b> 🥾<br>${esc(whenStr(w.when))}<br>${miles(w.dist||0)}${w.mins?" · "+w.mins+" min":""}${w.note?"<br>"+esc(w.note):""}`;
+function renderWalks(){
+  if(!map) return;
+  walkGroup.clearLayers();
+  const fh=$("wFilterH").value, days=+$("wFilterD").value, cut=days?Date.now()-days*864e5:0;
+  const list=walks.filter(w=>(!fh||w.hunter===fh)&&w.when>=cut);
+  if($("wShow").checked) list.forEach(w=>{ const pts=dec(w.pts); if(pts.length>1) L.polyline(pts,{color:hColor(w.hunter),weight:4,opacity:.9}).addTo(walkGroup).bindPopup(walkHTML(w)); });
+  $("wList").innerHTML=list.length?list.map(w=>`<div class="srow"><div class="thumb" style="background:${hColor(w.hunter)};display:flex;align-items:center;justify-content:center;font-size:26px;cursor:default">🥾</div><div class="info">${walkHTML(w)}<div class="btns"><button class="secondary" onclick="showWalk('${esc(w.id)}')">On map</button><button class="danger" onclick="delWalk('${esc(w.id)}')">Remove</button></div></div></div>`).join(""):'<div class="empty">No walks to show.</div>';
+}
+function showWalk(id){ const w=walks.find(a=>a.id===id); if(!w) return; $("wShow").checked=true; renderWalks(); map.fitBounds(dec(w.pts),{padding:[30,30]}); $("map").scrollIntoView({behavior:"smooth",block:"center"}); }
+async function delWalk(id){
+  if(!confirm("Remove this walk?")) return;
+  try{ await fetch(`${DBROOT}/walks/${id}.json`,{method:"DELETE"}); loadMap(); }catch(e){ alert("Couldn't remove it. Check your connection."); }
+}
 
 /* ===== START ===== */
 $("date").value=todayStr();
