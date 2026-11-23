@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hunting Stand Organizer</title>
+<title>My Hunting Journal</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -64,8 +64,8 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
 .note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:12px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;position:sticky;top:0;z-index:1100;background:#0f140f;padding:8px;border:1px solid var(--border);border-radius:14px}
-.tab{margin:0;background:transparent;color:var(--muted);border:none;font-weight:800;font-size:12.5px;padding:12px 2px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;position:sticky;top:0;z-index:1100;background:#0f140f;padding:8px;border:1px solid var(--border);border-radius:14px}
+.tab{margin:0;background:transparent;color:var(--muted);border:none;font-weight:800;font-size:15px;padding:13px 4px;cursor:pointer}
 .tab.active{background:var(--accent);color:#10150d}
 .page{max-width:680px;margin:0 auto}
 .page.wide{max-width:900px}
@@ -129,83 +129,13 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
 <div class="wrap">
 
 <header>
-  <h1>🦌 Hunting Stand Organizer</h1>
-  <p class="subtitle">Pick a day, pick your name, pick a stand. Everyone sees the same list.</p>
-  <div id="status" class="status">Connecting…</div>
+  <h1>🦌 My Hunting Journal</h1>
+  <p class="subtitle">Your stands, sightings, walks, and hunt log — all in one place.</p>
 </header>
 
 <div class="tabs" role="tablist">
-  <button class="tab active" id="tabBtnBook" onclick="showTab('book')">📅 Book</button>
-  <button class="tab" id="tabBtnSchedule" onclick="showTab('schedule')">📋 Schedule</button>
+  <button class="tab active" id="tabBtnInsights" onclick="showTab('insights')">📊 Log &amp; Insights</button>
   <button class="tab" id="tabBtnMap" onclick="showTab('map')">🗺️ Map</button>
-  <button class="tab" id="tabBtnInsights" onclick="showTab('insights')">📊 Insights</button>
-</div>
-
-<!-- ========== BOOK TAB ========== -->
-<div id="tabBook" class="page">
-  <section class="card">
-    <h2>Book a Hunt</h2>
-
-    <div class="step">1. What day?</div>
-    <input id="date" type="date">
-
-    <div class="step">2. Who are you?</div>
-    <div id="hunterChoices" class="choices"></div>
-
-    <div class="step">3. Morning, afternoon, or all day?</div>
-    <div id="timeChoices" class="timebar"></div>
-
-    <div class="step">4. Which stand?</div>
-    <p class="hint">Red stands are already taken for that day and time.</p>
-    <div id="locationChoices" class="choices"></div>
-
-    <div id="msg" class="msg" role="status"></div>
-    <button id="bookBtn" class="main" onclick="bookHunt()">Book This Hunt</button>
-  </section>
-
-  <section class="card">
-    <h2>Backup &amp; Cleanup</h2>
-    <div class="actions">
-      <button class="secondary" onclick="exportCSV()">Download list</button>
-      <button class="danger" onclick="clearPast()">Remove old hunts</button>
-    </div>
-    <p class="note">“Remove old hunts” only deletes bookings from days that have already passed.</p>
-  </section>
-</div>
-
-<!-- ========== SCHEDULE TAB ========== -->
-<div id="tabSchedule" class="page wide" style="display:none">
-  <section class="card">
-    <h2>Who's Hunting</h2>
-    <div class="toggle">
-      <button id="viewWeekBtn" class="on" onclick="setView('week')">Week</button>
-      <button id="viewListBtn" onclick="setView('list')">Full list</button>
-    </div>
-
-    <div id="weekView">
-      <div class="weeknav">
-        <button onclick="shiftWeek(-1)" aria-label="Previous week">‹</button>
-        <div id="weekLabel" class="label"></div>
-        <button onclick="shiftWeek(1)" aria-label="Next week">›</button>
-      </div>
-      <button class="thisweek" onclick="thisWeek()">Jump to this week</button>
-      <div class="legend">
-        <span><i style="background:var(--accent)"></i>Plenty open</span>
-        <span><i style="background:#d1b04a"></i>Filling up</span>
-        <span><i style="background:var(--danger)"></i>Almost full</span>
-      </div>
-      <div id="weekDays"></div>
-    </div>
-
-    <div id="listView" style="display:none">
-      <div class="filter">
-        <input id="filterDate" type="date" onchange="render()" aria-label="Show one day">
-        <select id="filterHunter" onchange="render()" aria-label="Show one hunter"></select>
-      </div>
-      <label class="check"><input type="checkbox" id="showPast" onchange="render()"> Also show past hunts</label>
-      <div id="schedule"></div>
-    </div>
-  </section>
 </div>
 
 <!-- ========== MAP TAB ========== -->
@@ -226,23 +156,23 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
   <section class="card">
     <h2>Walks &amp; Paths</h2>
     <div class="step" style="margin-top:12px">Record or add a walk</div>
-    <select id="wHunter" aria-label="Who is walking"></select>
+    <input type="hidden" id="wHunter" value="Me">
     <button id="wStart" class="main" style="margin-top:10px" onclick="startWalk()">▶ Start Walk</button>
     <button id="wStop" class="main" style="margin-top:10px;background:var(--danger);color:#fff;display:none" onclick="stopWalk()">■ Stop &amp; Save</button>
     <div id="wLive" class="pv"></div>
     <p class="note">While recording, keep this page open and the screen on. Phones pause web pages when the screen locks, which leaves gaps. For a long day, use a GPS app and upload the file below.</p>
     <div class="step">Or upload a track (GPX file)</div>
     <input id="wGpx" type="file" accept=".gpx,.xml,application/gpx+xml" multiple onchange="uploadGPX(this)">
-    <p class="hint" style="margin-top:8px">Export a GPX from onX, Gaia, AllTrails, Strava, or a watch app. Pick the hunter above first.</p>
+    <p class="hint" style="margin-top:8px">Export a GPX from onX, Gaia, AllTrails, Strava, or a watch app.</p>
     <div class="step">Show on map</div>
     <label class="check"><input type="checkbox" id="wShow" checked onchange="renderWalks()"> Show walked paths</label>
     <div class="filter">
-      <select id="wFilterH" onchange="renderWalks()" aria-label="Hunter"></select>
+      <input type="hidden" id="wFilterH" value="">
       <select id="wFilterD" onchange="renderWalks()" aria-label="Time range">
         <option value="0">All time</option><option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option>
       </select>
     </div>
-    <div id="wLegend" class="legend"></div>
+    <div id="wLegend" style="display:none"></div>
     <div id="wList"></div>
   </section>
 
@@ -251,7 +181,7 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
     <div class="step">1. What did you see?</div>
     <div id="typeChoices" class="choices"></div>
     <div class="step">2. Details</div>
-    <select id="sHunter" aria-label="Who saw it"></select>
+    <input type="hidden" id="sHunter" value="Me">
     <select id="sCount" aria-label="How many" style="margin-top:8px"></select>
     <input id="sNote" type="text" maxlength="200" placeholder="Note (wind, direction, points…)" style="margin-top:8px">
     <div class="step">3. Photo (optional)</div>
@@ -331,231 +261,28 @@ const locations = ["Power Line Stand","Dad's Ladder","Crooked Stand","King Seat"
 const times = ["All Day","Morning","Afternoon"];
 
 let bookings = [];
-let selHunter = null, selLocation = null, selTime = "All Day";
-try { selHunter = localStorage.getItem("huntingHunter"); if (!hunters.includes(selHunter)) selHunter = null; } catch(e){}
-
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const todayStr = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
-const fmtDate = s => new Date(s+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
-const overlaps = (a,b) => a==="All Day" || b==="All Day" || a===b;
-
-/* ===== DATABASE CALLS ===== */
+/* old group bookings are only read, for the one-time import */
 async function loadBookings(){
-  try{
-    const r = await fetch(DB+".json");
-    if(!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    bookings = d ? Object.entries(d).map(([id,v])=>({id,...v})) : [];
-    setStatus("✓ Live — updated " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), false);
-    render(); renderChoices(); renderWeek();
-    return true;
-  }catch(e){
-    setStatus("⚠ Can't reach the shared list. Check your internet connection and pull to refresh.", true);
-    return false;
-  }
-}
-function setStatus(t,bad){ const s=$("status"); s.textContent=t; s.className="status"+(bad?" bad":""); }
-
-/* ===== FIND CONFLICTS ===== */
-function standTaken(loc,date,time){
-  return bookings.find(b=>b.date===date && b.location===loc && overlaps(b.time,time));
-}
-function hunterBusy(name,date,time){
-  return bookings.find(b=>b.date===date && b.hunter===name && overlaps(b.time,time));
+  try{ const r=await fetch(DB+".json"); if(!r.ok) throw 0; const d=await r.json(); bookings=d?Object.entries(d).map(([id,v])=>({id,...v})):[]; return true; }
+  catch(e){ return false; }
 }
 
-/* ===== SCREEN PIECES ===== */
-function renderChoices(){
-  const date = $("date").value;
-  $("hunterChoices").innerHTML = hunters.map((h,i)=>
-    `<button type="button" class="choice ${selHunter===h?"selected":""}" data-t="h" data-i="${i}">${selHunter===h?"✓ ":""}${esc(h)}</button>`).join("");
-  $("timeChoices").innerHTML = times.map((t,i)=>
-    `<button type="button" class="choice ${selTime===t?"selected":""}" data-t="t" data-i="${i}">${esc(t)}</button>`).join("");
-  $("locationChoices").innerHTML = locations.map((l,i)=>{
-    const t = date ? standTaken(l,date,selTime) : null;
-    if(t) return `<button type="button" class="choice taken" disabled>${esc(l)}<small>Taken — ${esc(t.hunter)} (${esc(t.time)})</small></button>`;
-    return `<button type="button" class="choice ${selLocation===l?"selected":""}" data-t="l" data-i="${i}">${selLocation===l?"✓ ":""}${esc(l)}<small>Open</small></button>`;
-  }).join("");
-}
-document.addEventListener("click",e=>{
-  const b = e.target.closest("[data-t]"); if(!b) return;
-  const i = +b.dataset.i;
-  if(b.dataset.t==="h"){ selHunter=hunters[i]; try{localStorage.setItem("huntingHunter",selHunter)}catch(e){} }
-  if(b.dataset.t==="t"){ selTime=times[i]; if(selLocation && $("date").value && standTaken(selLocation,$("date").value,selTime)) selLocation=null; }
-  if(b.dataset.t==="l"){ selLocation=locations[i]; }
-  hideMsg(); renderChoices();
-});
-$("date").addEventListener("change",()=>{
-  if(selLocation && $("date").value && standTaken(selLocation,$("date").value,selTime)) selLocation=null;
-  hideMsg(); renderChoices();
-});
-
-function showMsg(kind,html){ const m=$("msg"); m.className="msg "+kind; m.innerHTML=html; m.style.display="block"; }
-function hideMsg(){ $("msg").style.display="none"; }
-
-/* ===== BOOK ===== */
-async function bookHunt(){
-  const date = $("date").value;
-  if(!date) return showMsg("err","Please pick a day.");
-  if(!selHunter) return showMsg("err","Please tap your name.");
-  if(!selLocation) return showMsg("err","Please tap a stand.");
-  if(date < todayStr()) return showMsg("err","That day has already passed. Pick today or a future day.");
-
-  const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking…";
-  try{
-    /* get the newest list first so two people can't grab the same stand */
-    if(!(await loadBookings())) throw new Error("offline");
-    const t = standTaken(selLocation,date,selTime);
-    if(t){
-      selLocation=null; renderChoices();
-      return showMsg("err",`⚠️ <strong>Too late — that stand was just taken</strong> by ${esc(t.hunter)} (${esc(t.time)}). Pick another stand.`);
-    }
-    const busy = hunterBusy(selHunter,date,selTime);
-    if(busy && !confirm(`${selHunter}, you already have ${busy.location} that day (${busy.time}). Book a second stand anyway?`)) return;
-
-    const r = await fetch(DB+".json",{method:"POST",body:JSON.stringify({date,hunter:selHunter,location:selLocation,time:selTime,created:Date.now()})});
-    if(!r.ok) throw new Error(r.status);
-    const bookedLoc = selLocation; selLocation=null;
-    await loadBookings();
-    showMsg("ok",`✓ <strong>Booked!</strong> ${esc(selHunter)} — ${esc(bookedLoc)}<br>${esc(fmtDate(date))} (${esc(selTime)})`);
-  }catch(e){
-    showMsg("err","Couldn't save your booking. Check your internet connection and try again.");
-  }finally{
-    btn.disabled=false; btn.textContent="Book This Hunt";
-  }
-}
-
-/* ===== REMOVE ===== */
-async function removeBooking(id){
-  const b = bookings.find(x=>x.id===id); if(!b) return;
-  if(!confirm(`Remove ${b.hunter} — ${b.location} on ${fmtDate(b.date)} (${b.time})?`)) return;
-  try{
-    const r = await fetch(`${DB}/${id}.json`,{method:"DELETE"});
-    if(!r.ok) throw new Error(r.status);
-    await loadBookings();
-  }catch(e){ alert("Couldn't remove it. Check your internet connection and try again."); }
-}
-
-/* ===== SCHEDULE ===== */
-function render(){
-  const fd=$("filterDate").value, fh=$("filterHunter").value, past=$("showPast").checked, today=todayStr();
-  const list = bookings.filter(b=>(!fd||b.date===fd)&&(!fh||b.hunter===fh)&&(past||fd||b.date>=today));
-  list.sort((a,b)=>(a.date+times.indexOf(a.time)+a.location).localeCompare(b.date+times.indexOf(b.time)+b.location));
-  const el=$("schedule");
-  if(!list.length){
-    el.innerHTML=`<div class="empty">No hunts booked${fd||fh?" for this view":" yet"}.<br>Use the form to book the first one.</div>`;
-    return;
-  }
-  let html="", last="";
-  list.forEach(b=>{
-    if(b.date!==last){
-      last=b.date;
-      html+=`<div class="day">${esc(fmtDate(b.date))}${b.date===today?'<span class="today">Today</span>':""}</div>`;
-    }
-    html+=`<div class="booking">
-      <div><div class="who">${esc(b.hunter)}</div><div class="where">🦌 ${esc(b.location)}</div></div>
-      <div class="right"><span class="badge">${esc(b.time)}</span><br>
-      <button class="remove" onclick="removeBooking('${esc(b.id)}')">Remove</button></div>
-    </div>`;
-  });
-  el.innerHTML=html;
-}
-
-/* ===== BACKUP & CLEANUP ===== */
-function exportCSV(){
-  const rows=[["Date","Hunter","Stand","Time"]].concat(
-    [...bookings].sort((a,b)=>a.date.localeCompare(b.date)).map(b=>[b.date,b.hunter,b.location,b.time]));
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="hunting-bookings.csv"; a.click(); URL.revokeObjectURL(a.href);
-}
-async function clearPast(){
-  const old=bookings.filter(b=>b.date<todayStr());
-  if(!old.length) return alert("No old hunts to remove.");
-  if(!confirm(`Remove ${old.length} booking(s) from days that already passed?`)) return;
-  const patch={}; old.forEach(b=>patch[b.id]=null);
-  try{
-    const r=await fetch(DB+".json",{method:"PATCH",body:JSON.stringify(patch)});
-    if(!r.ok) throw new Error(r.status);
-    await loadBookings();
-  }catch(e){ alert("Couldn't remove them. Check your internet connection and try again."); }
-}
-
-
-/* ===== TABS & WEEK VIEW ===== */
-let weekStart = startOfWeek(todayStr());
-
-function startOfWeek(str){
-  const d=new Date(str+"T12:00:00"); d.setDate(d.getDate()-d.getDay()); return ymd(d);
-}
+/* ===== TABS ===== */
 function ymd(d){ const m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0"); return d.getFullYear()+"-"+m+"-"+day; }
 function addDays(str,n){ const d=new Date(str+"T12:00:00"); d.setDate(d.getDate()+n); return ymd(d); }
-const shortDate = s => new Date(s+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
-
 function showTab(t){
-  ["book","schedule","map","insights"].forEach(n=>{
-    $("tab"+n[0].toUpperCase()+n.slice(1)).style.display = t===n ? "" : "none";
-    $("tabBtn"+n[0].toUpperCase()+n.slice(1)).classList.toggle("active", t===n);
+  ["map","insights"].forEach(n=>{
+    const N=n[0].toUpperCase()+n.slice(1);
+    $("tab"+N).style.display = t===n ? "" : "none";
+    $("tabBtn"+N).classList.toggle("active", t===n);
   });
   window.scrollTo(0,0);
-  if(t==="schedule") renderWeek();
   if(t==="insights") loadHunts();
   if(t==="map"){ initMap(); setTimeout(()=>map.invalidateSize(),50); loadMap(); }
 }
-function setView(v){
-  $("weekView").style.display = v==="week" ? "" : "none";
-  $("listView").style.display = v==="list" ? "" : "none";
-  $("viewWeekBtn").classList.toggle("on", v==="week");
-  $("viewListBtn").classList.toggle("on", v==="list");
-}
-function shiftWeek(n){ weekStart=addDays(weekStart,7*n); renderWeek(); }
-function thisWeek(){ weekStart=startOfWeek(todayStr()); renderWeek(); }
-
-function openStands(date){
-  /* a stand counts as "used up" if all-day, or both morning and afternoon are taken */
-  const day=bookings.filter(b=>b.date===date);
-  return locations.filter(l=>{
-    const mine=day.filter(b=>b.location===l);
-    if(mine.some(b=>b.time==="All Day")) return false;
-    return !(mine.some(b=>b.time==="Morning") && mine.some(b=>b.time==="Afternoon"));
-  }).length;
-}
-
-function renderWeek(){
-  $("weekLabel").textContent = shortDate(weekStart)+" – "+shortDate(addDays(weekStart,6));
-  const today=todayStr(); let html="";
-  for(let i=0;i<7;i++){
-    const d=addDays(weekStart,i);
-    const list=bookings.filter(b=>b.date===d).sort((a,b)=>times.indexOf(a.time)-times.indexOf(b.time)||a.location.localeCompare(b.location));
-    const open=openStands(d), total=locations.length;
-    const cls = open<=3 ? "full" : open<=7 ? "mid" : "";
-    const past = d<today;
-    const label = new Date(d+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
-    html+=`<div class="daycard ${cls} ${d===today?"isToday":""} ${past?"past":""}">
-      <div class="dayhead">
-        <div class="dayname">${esc(label)}${d===today?'<span class="today">Today</span>':""}</div>
-        <div class="opencount">${open===total?"All stands open":open+" of "+total+" stands open"}</div>
-      </div>`;
-    if(!list.length){
-      html+=`<div class="noone">No one is hunting yet.</div>`;
-    }else{
-      html+=list.map(b=>`<div class="brow">
-        <div><div class="who">${esc(b.hunter)}</div><div class="where">🦌 ${esc(b.location)}</div></div>
-        <div class="right"><span class="badge">${esc(b.time)}</span>
-        <br><button class="x" style="margin-top:6px" onclick="removeBooking('${esc(b.id)}')">Remove</button></div>
-      </div>`).join("");
-    }
-    if(!past) html+=`<button class="bookday" onclick="bookThisDay('${d}')">+ Book this day</button>`;
-    html+=`</div>`;
-  }
-  $("weekDays").innerHTML=html;
-}
-function bookThisDay(d){
-  $("date").value=d; selLocation=null; hideMsg(); renderChoices(); showTab("book");
-}
-
 
 /* ===== MAP, SIGHTINGS & PHOTOS ===== */
 const DBROOT = "https://last-war-alliance-default-rtdb.firebaseio.com/huntingStands";
@@ -574,8 +301,6 @@ function initMap(){
   baseSat.addTo(map);
   standGroup=L.layerGroup().addTo(map); sightGroup=L.layerGroup().addTo(map); walkGroup=L.layerGroup().addTo(map);
   map.on("click",e=>{ if(pickMode){ const f=pickMode; pickMode=null; $("hintbar").style.display="none"; f({lat:e.latlng.lat,lng:e.latlng.lng}); }});
-  $("sHunter").innerHTML='<option value="">Who saw it?</option>'+hunters.map(h=>`<option ${h===selHunter?"selected":""}>${esc(h)}</option>`).join("");
-  $("wHunter").innerHTML=$("sHunter").innerHTML.replace("Who saw it?","Who is walking?");
   $("wFilterH").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
   $("wLegend").innerHTML=hunters.map(h=>`<span><i style="background:${hColor(h)}"></i>${esc(h)}</span>`).join("");
   $("sCount").innerHTML=Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1} ${i?"animals":"animal"}</option>`).join("");
@@ -613,10 +338,8 @@ function renderMap(){
   locations.forEach((l,i)=>{
     const pin=pins[skey(l)]; if(!pin) return;
     pts.push([pin.lat,pin.lng]);
-    const bs=bookings.filter(b=>b.date===today&&b.location===l);
-    const who=bs.length?bs.map(b=>`${esc(b.hunter)} (${esc(b.time)})`).join("<br>"):"Open today";
     L.marker([pin.lat,pin.lng],{icon:icon(i+1,"#8fae63")}).addTo(standGroup)
-     .bindPopup(`<b>${esc(l)}</b><br>${who}<br><button class="pbtn" onclick="bookStand(${i})">Book this stand</button><button class="pbtn secondary" onclick="placeStand(${i})">Move pin</button>`);
+       .bindPopup(`<b>${esc(l)}</b><br><button class="pbtn" style="display:none"></button><button class="pbtn secondary" onclick="placeStand(${i})">Move pin</button>`);
   });
   sightings.forEach(x=>{
     if(typeof x.lat!=="number") return;
@@ -630,9 +353,8 @@ function renderMap(){
   $("unplaced").innerHTML = un.length ? '<div class="step">Stands not on the map yet</div>'+un.map(([l,i])=>`<div class="unp"><span>${esc(l)}</span><button class="secondary" onclick="placeStand(${i})">Place</button></div>`).join("") : "";
 }
 function sightHTML(x,popup){
-  return `<b>${esc(x.type)} × ${esc(x.count||1)}</b><br>${esc(x.hunter||"")} · ${esc(whenStr(x.when))}${x.note?"<br>"+esc(x.note):""}${x.hasPhoto&&popup?`<br><button class="pbtn" onclick="openPhoto('${esc(x.id)}')">View photo</button>`:""}`;
+  return `<b>${esc(x.type)} × ${esc(x.count||1)}</b><br>${esc(whenStr(x.when))}${x.note?"<br>"+esc(x.note):""}${x.hasPhoto&&popup?`<br><button class="pbtn" onclick="openPhoto('${esc(x.id)}')">View photo</button>`:""}`;
 }
-function bookStand(i){ selLocation=locations[i]; map.closePopup(); hideMsg(); renderChoices(); showTab("book"); }
 function placeStand(i){
   const n=locations[i]; map.closePopup();
   const save=ll=>fetch(`${DBROOT}/standPins/${skey(n)}.json`,{method:"PUT",body:JSON.stringify(ll)}).then(()=>{loadMap();map.setView([ll.lat,ll.lng],17)}).catch(()=>alert("Couldn't save. Check your connection."));
@@ -713,7 +435,7 @@ function closePhoto(){ $("photoBox").style.display="none"; $("photoInner").inner
 /* ===== WALKED PATHS ===== */
 const walkColors=["#ffd54a","#4fc3f7","#ff8a65","#ba68c8","#81c784","#f06292","#fff176","#90caf9"];
 let walks=[], walkGroup, rec=null, wakeLock=null;
-const hColor=h=>walkColors[Math.max(0,hunters.indexOf(h))%walkColors.length];
+const hColor=()=>walkColors[0];
 function dist(a,b){const R=6371000,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
 function pathLen(p){let d=0;for(let i=1;i<p.length;i++)d+=dist(p[i-1],p[i]);return d;}
 const miles=m=>(m/1609.34).toFixed(2)+" mi";
@@ -779,7 +501,7 @@ async function uploadGPX(inp){
   inp.value="";
   if(n){ map.fitBounds(last,{padding:[30,30]}); $("map").scrollIntoView({behavior:"smooth",block:"center"}); alert("Added "+n+" track"+(n>1?"s":"")+" to the map."); }
 }
-const walkHTML=w=>`<b>${esc(w.hunter)}</b> 🥾<br>${esc(whenStr(w.when))}<br>${miles(w.dist||0)}${w.mins?" · "+w.mins+" min":""}${w.note?"<br>"+esc(w.note):""}`;
+const walkHTML=w=>`<b>Walk</b> 🥾<br>${esc(whenStr(w.when))}<br>${miles(w.dist||0)}${w.mins?" · "+w.mins+" min":""}${w.note?"<br>"+esc(w.note):""}`;
 function renderWalks(){
   if(!map) return;
   walkGroup.clearLayers();
@@ -946,12 +668,7 @@ async function runImport(){
 initInsights();
 
 /* ===== START ===== */
-$("date").value=todayStr();
-$("filterHunter").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
-renderChoices(); render(); renderWeek();
-loadBookings();
-setInterval(loadBookings,20000);
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) loadBookings(); });
+showTab("insights");
 </script>
 </body>
 </html>
