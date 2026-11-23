@@ -64,8 +64,8 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
 .note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:12px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;position:sticky;top:0;z-index:1100;background:#0f140f;padding:8px;border:1px solid var(--border);border-radius:14px}
-.tab{margin:0;background:transparent;color:var(--muted);border:none;font-weight:800;font-size:15px;padding:13px 4px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;position:sticky;top:0;z-index:1100;background:#0f140f;padding:8px;border:1px solid var(--border);border-radius:14px}
+.tab{margin:0;background:transparent;color:var(--muted);border:none;font-weight:800;font-size:12.5px;padding:12px 2px;cursor:pointer}
 .tab.active{background:var(--accent);color:#10150d}
 .page{max-width:680px;margin:0 auto}
 .page.wide{max-width:900px}
@@ -112,6 +112,15 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
 #photoBox img{max-width:100%;max-height:80vh;border-radius:10px}
 #photoBox button{width:auto;margin-top:14px;padding:12px 30px}
 .pv{font-size:13px;color:var(--accent2);margin-top:6px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 4px;text-align:center}
+.stat strong{display:block;font-size:20px}.stat span{color:var(--muted);font-size:11px}
+.ir{display:grid;grid-template-columns:104px 1fr 84px;gap:8px;align-items:center;margin:9px 0;font-size:14px}
+.il{font-weight:700}.ib{background:#101610;border-radius:6px;height:14px;overflow:hidden}.ib div{background:var(--accent);height:100%}
+.iv{font-size:13px;text-align:right;font-weight:800}.iv small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.few{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.filter{grid-template-columns:1fr}h1{font-size:23px}}
 @media(max-width:420px){.choices{grid-template-columns:1fr}}
 </style>
@@ -129,6 +138,7 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
   <button class="tab active" id="tabBtnBook" onclick="showTab('book')">📅 Book</button>
   <button class="tab" id="tabBtnSchedule" onclick="showTab('schedule')">📋 Schedule</button>
   <button class="tab" id="tabBtnMap" onclick="showTab('map')">🗺️ Map</button>
+  <button class="tab" id="tabBtnInsights" onclick="showTab('insights')">📊 Insights</button>
 </div>
 
 <!-- ========== BOOK TAB ========== -->
@@ -262,6 +272,49 @@ button.danger{background:transparent;color:#e9aaa2;border:1px solid #70443e;curs
     <select id="sFilter" onchange="renderSightings()" aria-label="Filter by type"></select>
     <div id="sList" style="margin-top:12px"></div>
   </section>
+<!-- ========== INSIGHTS TAB ========== -->
+<div id="tabInsights" class="page" style="display:none">
+  <section class="card">
+    <h2>Log a Hunt</h2>
+    <p class="hint">Log every sit, even when you see nothing. Weather fills in automatically.</p>
+    <div class="step">Day and stand</div>
+    <input id="hDate" type="date">
+    <select id="hStand" style="margin-top:8px" aria-label="Stand"></select>
+    <div class="step">Times</div>
+    <div class="two"><div><p class="hint">In</p><input id="hStart" type="time" value="06:00"></div><div><p class="hint">Out</p><input id="hEnd" type="time" value="09:30"></div></div>
+    <div class="step">What did you see?</div>
+    <div class="two"><div><p class="hint">Bucks</p><select id="hBucks"></select></div><div><p class="hint">Does</p><select id="hDoes"></select></div></div>
+    <label class="check" style="margin-top:12px"><input type="checkbox" id="hHarv"> I harvested a deer</label>
+    <input id="hNote" type="text" maxlength="200" placeholder="Note (optional)">
+    <div id="hMsg" class="msg" role="status"></div>
+    <button id="hBtn" class="main" onclick="saveHunt()">Save Hunt</button>
+  </section>
+
+  <section class="card">
+    <h2>Pick a Stand</h2>
+    <p class="hint">Checks the forecast wind and ranks your stands by how they've done on similar winds.</p>
+    <div class="two"><input id="sDate" type="date"><select id="sHour"><option value="7">Morning</option><option value="16">Evening</option></select></div>
+    <button class="main" style="margin-top:12px" onclick="suggest()">Check Wind &amp; Suggest</button>
+    <div id="sOut" style="margin-top:12px"></div>
+  </section>
+
+  <div id="iStats" class="stats"></div>
+  <div id="iSections"></div>
+
+  <section class="card">
+    <h2>Import Past Hunts</h2>
+    <p class="hint">Builds hunt log entries from your past bookings and sightings. You review them first.</p>
+    <select id="impHunter" aria-label="Whose records"></select>
+    <button class="main" style="margin-top:12px" onclick="findImport()">Find Hunts to Import</button>
+    <div id="impOut" style="margin-top:12px"></div>
+  </section>
+
+  <section class="card">
+    <h2>Past Hunts</h2>
+    <div id="hList"></div>
+  </section>
+</div>
+
 <div id="photoBox"><div id="photoInner"></div><button class="secondary" onclick="closePhoto()">Close</button></div>
 
 </div>
@@ -442,12 +495,13 @@ function addDays(str,n){ const d=new Date(str+"T12:00:00"); d.setDate(d.getDate(
 const shortDate = s => new Date(s+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
 function showTab(t){
-  ["book","schedule","map"].forEach(n=>{
+  ["book","schedule","map","insights"].forEach(n=>{
     $("tab"+n[0].toUpperCase()+n.slice(1)).style.display = t===n ? "" : "none";
     $("tabBtn"+n[0].toUpperCase()+n.slice(1)).classList.toggle("active", t===n);
   });
   window.scrollTo(0,0);
   if(t==="schedule") renderWeek();
+  if(t==="insights") loadHunts();
   if(t==="map"){ initMap(); setTimeout(()=>map.invalidateSize(),50); loadMap(); }
 }
 function setView(v){
@@ -739,6 +793,157 @@ async function delWalk(id){
   if(!confirm("Remove this walk?")) return;
   try{ await fetch(`${DBROOT}/walks/${id}.json`,{method:"DELETE"}); loadMap(); }catch(e){ alert("Couldn't remove it. Check your connection."); }
 }
+
+/* ===== HUNT LOG & INSIGHTS ===== */
+let hunts=[], iPins={};
+const sectors=["N","NE","E","SE","S","SW","W","NW"];
+const sec=d=>sectors[Math.round(d/45)%8];
+const secIdx=d=>Math.round(d/45)%8;
+function moonPhase(date){ const d=new Date(date+"T12:00:00"),k=((d/86400000+2440587.5)-2451550.1)/29.530588853; return ((k%1)+1)%1; }
+async function wxFetch(lat,lng,date,hr){
+  const old=(Date.now()-new Date(date+"T12:00:00"))>80*864e5;
+  const u=`https://${old?"archive-api":"api"}.open-meteo.com/v1/${old?"archive":"forecast"}?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&start_date=${date}&end_date=${date}`;
+  const r=await fetch(u); if(!r.ok) throw 0;
+  const h=(await r.json()).hourly, i=Math.min(hr,h.time.length-1), j=Math.max(0,i-3);
+  return {t:Math.round(h.temperature_2m[i]),ws:Math.round(h.wind_speed_10m[i]),wd:Math.round(h.wind_direction_10m[i]),p:Math.round(h.surface_pressure[i]),pt:+(h.surface_pressure[i]-h.surface_pressure[j]).toFixed(1),cc:Math.round(h.cloud_cover[i])};
+}
+const avgPin=()=>{ const a=Object.values(iPins); return a.length?{lat:a.reduce((x,y)=>x+y.lat,0)/a.length,lng:a.reduce((x,y)=>x+y.lng,0)/a.length}:null; };
+function initInsights(){
+  const nums=Array.from({length:16},(_,i)=>`<option>${i}</option>`).join("");
+  $("hBucks").innerHTML=nums; $("hDoes").innerHTML=nums;
+  $("hStand").innerHTML=locations.map(l=>`<option>${esc(l)}</option>`).join("");
+  $("impHunter").innerHTML='<option value="">All hunters</option>'+hunters.map(h=>`<option>${esc(h)}</option>`).join("");
+  $("hDate").value=todayStr(); $("sDate").value=addDays(todayStr(),1);
+}
+function hMsg(k,t){ const m=$("hMsg"); m.className="msg "+k; m.innerHTML=t; m.style.display="block"; }
+async function loadHunts(){
+  try{
+    const [h,p]=await Promise.all([fetch(DBROOT+"/hunts.json").then(r=>r.json()),fetch(DBROOT+"/standPins.json").then(r=>r.json())]);
+    hunts=h?Object.entries(h).map(([id,v])=>({id,...v})).sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)):[]; iPins=p||{};
+    renderInsights();
+  }catch(e){ $("iStats").innerHTML=""; $("iSections").innerHTML='<div class="empty">Can\'t reach the shared data. Check your internet connection.</div>'; }
+}
+async function saveHunt(){
+  const date=$("hDate").value, stand=$("hStand").value, st=$("hStart").value, en=$("hEnd").value;
+  if(!date||!stand||!st||!en) return hMsg("err","Please fill in the day, stand, and times.");
+  const mins=(+en.slice(0,2)*60+ +en.slice(3))-(+st.slice(0,2)*60+ +st.slice(3));
+  if(mins<=0) return hMsg("err","Out time must be after in time.");
+  const btn=$("hBtn"); btn.disabled=true; btn.textContent="Saving…";
+  const o={date,stand,start:st,end:en,hours:+(mins/60).toFixed(2),bucks:+$("hBucks").value,does:+$("hDoes").value,harvest:$("hHarv").checked,note:$("hNote").value.trim(),moon:+moonPhase(date).toFixed(2)};
+  let wxNote="";
+  try{
+    if(!Object.keys(iPins).length) await loadHunts();
+    const pin=iPins[skey(stand)]||avgPin();
+    if(pin) o.wx=await wxFetch(pin.lat,pin.lng,date,+st.slice(0,2));
+    else wxNote=" No weather saved — place your stand pins on the Map tab to get it automatically.";
+  }catch(e){ wxNote=" Couldn't get the weather for that date."; }
+  try{
+    const r=await fetch(DBROOT+"/hunts.json",{method:"POST",body:JSON.stringify(o)}); if(!r.ok) throw 0;
+    $("hNote").value=""; $("hBucks").value=0; $("hDoes").value=0; $("hHarv").checked=false;
+    await loadHunts();
+    hMsg("ok","✓ <strong>Hunt saved.</strong>"+(o.wx?` Weather: ${o.wx.t}°F, ${sec(o.wx.wd)} wind ${o.wx.ws} mph.`:wxNote));
+  }catch(e){ hMsg("err","Couldn't save. Check your internet connection and try again."); }
+  finally{ btn.disabled=false; btn.textContent="Save Hunt"; }
+}
+async function delHunt(id){
+  if(!confirm("Remove this hunt?")) return;
+  try{ await fetch(`${DBROOT}/hunts/${id}.json`,{method:"DELETE"}); loadHunts(); }catch(e){ alert("Couldn't remove it. Check your connection."); }
+}
+function rowsBy(keyFn,order){
+  const m={};
+  hunts.forEach(h=>{ const k=keyFn(h); if(k==null) return; const r=m[k]=m[k]||{k,n:0,h:0,deer:0}; r.n++; r.h+=h.hours||0; r.deer+=(h.bucks||0)+(h.does||0); });
+  const rows=Object.values(m).map(r=>({...r,dph:r.h?r.deer/r.h:0}));
+  return order?rows.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)):rows.sort((a,b)=>b.dph-a.dph);
+}
+function bars(rows){
+  const mx=Math.max(.01,...rows.map(r=>r.dph));
+  return rows.map(r=>`<div class="ir ${r.n<3?"few":""}"><div class="il">${esc(r.k)}</div><div class="ib"><div style="width:${Math.round(r.dph/mx*100)}%"></div></div><div class="iv">${r.dph.toFixed(1)}/hr<small>${r.n} hunt${r.n>1?"s":""} · ${r.h.toFixed(1)} h</small></div></div>`).join("")||'<div class="empty">Not enough data yet.</div>';
+}
+function renderInsights(){
+  const H=hunts.reduce((a,h)=>a+(h.hours||0),0), B=hunts.reduce((a,h)=>a+(h.bucks||0),0), D=B+hunts.reduce((a,h)=>a+(h.does||0),0);
+  $("iStats").innerHTML=[[hunts.length,"Hunts"],[H.toFixed(1),"Hours"],[D,"Deer seen"],[H?(D/H).toFixed(2):"0","Deer / hr"]].map(([v,l])=>`<div class="stat"><strong>${v}</strong><span>${l}</span></div>`).join("");
+  const TOD=["Dawn (before 8)","Morning (8–11)","Midday (11–2)","Afternoon (2+)"];
+  const secs=[
+    ["By stand",rowsBy(h=>h.stand)],
+    ["By time of day",rowsBy(h=>{const x=+h.start.slice(0,2);return x<8?TOD[0]:x<11?TOD[1]:x<14?TOD[2]:TOD[3];},TOD)],
+    ["By wind direction",rowsBy(h=>h.wx?sec(h.wx.wd)+" wind":null,sectors.map(x=>x+" wind"))],
+    ["By pressure trend (3 hrs)",rowsBy(h=>h.wx?(h.wx.pt<=-1.5?"Falling":h.wx.pt>=1.5?"Rising":"Steady"):null,["Falling","Steady","Rising"])],
+    ["By temperature",rowsBy(h=>h.wx?(h.wx.t<30?"Under 30°F":h.wx.t<45?"30–45°F":h.wx.t<60?"45–60°F":"60°F+"):null,["Under 30°F","30–45°F","45–60°F","60°F+"])],
+    ["By moon phase",rowsBy(h=>{const f=h.moon;return f==null?null:(f<.125||f>=.875)?"New moon":f<.375?"Waxing":f<.625?"Full moon":"Waning";},["New moon","Waxing","Full moon","Waning"])]
+  ];
+  $("iSections").innerHTML=secs.map(([t,r])=>`<section class="card"><h2 style="font-size:17px">${t}</h2>${bars(r)}</section>`).join("")+'<p class="note" style="text-align:center">Faded bars = fewer than 3 hunts. Early numbers are hints, not rules.</p>';
+  $("hList").innerHTML=hunts.length?hunts.map(h=>`<div class="booking"><div><div class="who">${esc(h.stand)}${h.harvest?" 🎯":""}</div><div class="where">${esc(formatShort(h.date))} · ${esc(h.start)}–${esc(h.end)} · ${(h.bucks||0)+(h.does||0)} deer${h.bucks?" ("+h.bucks+" buck)":""}${h.wx?" · "+h.wx.t+"°F "+sec(h.wx.wd)+" "+h.wx.ws+"mph":""}${h.note?"<br>"+esc(h.note):""}</div></div><button class="remove" onclick="delHunt('${esc(h.id)}')">Remove</button></div>`).join(""):'<div class="empty">No hunts logged yet.</div>';
+}
+const formatShort=d=>new Date(d+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+async function suggest(){
+  const pin=avgPin(); if(!pin) return alert("Place your stand pins on the Map tab first so I know where to check the weather.");
+  const date=$("sDate").value, hr=+$("sHour").value, out=$("sOut");
+  if(!date) return alert("Pick a day.");
+  out.innerHTML='<div class="empty">Checking the forecast…</div>';
+  try{
+    const w=await wxFetch(pin.lat,pin.lng,date,hr), s=secIdx(w.wd);
+    const near=h=>h.wx&&Math.min((secIdx(h.wx.wd)-s+8)%8,(s-secIdx(h.wx.wd)+8)%8)<=1;
+    const last={}; hunts.forEach(h=>{ if(!last[h.stand]||h.date>last[h.stand]) last[h.stand]=h.date; });
+    const rows=locations.map(l=>{
+      const m=hunts.filter(h=>h.stand===l&&near(h)), hrs=m.reduce((a,h)=>a+h.hours,0), deer=m.reduce((a,h)=>a+(h.bucks||0)+(h.does||0),0);
+      return {l,n:m.length,dph:hrs?deer/hrs:0,d:last[l]?Math.round((Date.now()-new Date(last[l]+"T12:00:00"))/864e5):null};
+    }).sort((a,b)=>(b.n>0)-(a.n>0)||b.dph-a.dph||(b.d??999)-(a.d??999));
+    out.innerHTML=`<div class="msg ok" style="display:block;margin-top:0"><strong>${sectors[s]} wind ${w.ws} mph · ${w.t}°F</strong> · pressure ${w.pt<=-1.5?"falling":w.pt>=1.5?"rising":"steady"} · ${w.cc}% cloud</div>`+
+      rows.map(r=>`<div class="booking"><div><div class="who">${esc(r.l)}</div><div class="where">${r.n?r.dph.toFixed(1)+" deer/hr on similar winds ("+r.n+" hunt"+(r.n>1?"s":"")+")":"Not hunted on this wind yet"} · ${r.d==null?"never logged":r.d===0?"hunted today":r.d+" days ago"}</div></div></div>`).join("")+
+      '<p class="note">This only reflects what you\'ve logged. Use your own knowledge of which winds each stand can handle.</p>';
+  }catch(e){ out.innerHTML='<div class="msg err" style="display:block">Couldn\'t get the forecast. Check your connection, or try a date within the next two weeks.</div>'; }
+}
+/* ===== IMPORT PAST HUNTS ===== */
+const IMP={"Morning":["06:30","10:00"],"Afternoon":["14:30","17:30"],"All Day":["06:30","13:30"]};
+let impList=[];
+async function findImport(){
+  const out=$("impOut"); out.innerHTML='<div class="empty">Looking through your records…</div>';
+  try{
+    await loadBookings(); await loadHunts();
+    const sj=await (await fetch(DBROOT+"/sightings.json")).json();
+    const hf=$("impHunter").value, today=todayStr();
+    const sights=(sj?Object.values(sj):[]).filter(x=>(!hf||x.hunter===hf)&&x.type!=="Trail cam").map(x=>({...x,date:ymd(new Date(x.when)),b:new Date(x.when).getHours()<12?"Morning":"Afternoon"}));
+    const have=new Set(hunts.map(h=>h.date+"|"+h.stand));
+    const c=bookings.filter(b=>(!hf||b.hunter===hf)&&b.date<=today).map(b=>({date:b.date,stand:b.location,time:b.time,src:"booking",bucks:0,does:0,harvest:false}));
+    const near=x=>{ let best=null,bd=1e12; locations.forEach(l=>{ const p=iPins[skey(l)]; if(p&&typeof x.lat==="number"){ const d=dist([p.lat,p.lng],[x.lat,x.lng]); if(d<bd){bd=d;best=l;} } }); return best; };
+    sights.forEach(x=>{
+      let opts=c.filter(k=>k.date===x.date);
+      if(opts.length>1){ const m=opts.filter(k=>k.time==="All Day"||k.time===x.b); if(m.length) opts=m; }
+      if(opts.length>1){ const n=near(x), m=opts.filter(k=>k.stand===n); if(m.length) opts=m; }
+      let t=opts[0];
+      if(!t){ t={date:x.date,stand:near(x)||locations[0],time:x.b,src:"sightings only",bucks:0,does:0,harvest:false}; c.push(t); }
+      if(x.type==="Buck") t.bucks+=x.count||1; else t.does+=x.count||1;
+      if(x.type==="Harvest") t.harvest=true;
+    });
+    impList=c.filter(k=>!have.has(k.date+"|"+k.stand)).sort((a,b)=>b.date.localeCompare(a.date));
+    renderImport();
+  }catch(e){ out.innerHTML='<div class="msg err" style="display:block">Couldn\'t load your records. Check your internet connection.</div>'; }
+}
+function renderImport(){
+  const out=$("impOut");
+  if(!impList.length){ out.innerHTML='<div class="empty">Nothing new to import.</div>'; return; }
+  const opts=l=>locations.map(x=>`<option ${x===l?"selected":""}>${esc(x)}</option>`).join("");
+  out.innerHTML='<p class="hint">Uncheck anything you didn’t actually hunt, and fix the times if you remember them. Unknown deer and harvests count as “doe/other”.</p>'+
+    impList.map((c,i)=>{ const t=IMP[c.time]||IMP.Morning; return `<div class="booking" style="display:block"><label class="check" style="margin:0 0 8px"><input type="checkbox" id="ic${i}" checked> <strong>${esc(formatShort(c.date))}</strong> · ${esc(c.time)} · ${c.src}</label><select id="is${i}">${opts(c.stand)}</select><div class="two" style="margin-top:8px"><input type="time" id="ia${i}" value="${t[0]}"><input type="time" id="ib${i}" value="${t[1]}"></div><div class="where" style="margin-top:6px">Deer seen: ${c.bucks} buck${c.bucks===1?"":"s"}, ${c.does} doe/other${c.harvest?" · 🎯 harvest":""}</div></div>`; }).join("")+
+    '<button class="main" id="impGo" onclick="runImport()">Import Selected</button>';
+}
+async function runImport(){
+  const btn=$("impGo"); btn.disabled=true; let n=0;
+  const todo=impList.map((c,i)=>({c,i})).filter(({i})=>$("ic"+i).checked);
+  for(const {c,i} of todo){
+    btn.textContent=`Importing ${n+1} of ${todo.length}…`;
+    const stand=$("is"+i).value, st=$("ia"+i).value, en=$("ib"+i).value;
+    const mins=(+en.slice(0,2)*60+ +en.slice(3))-(+st.slice(0,2)*60+ +st.slice(3));
+    if(!st||!en||mins<=0) continue;
+    const o={date:c.date,stand,start:st,end:en,hours:+(mins/60).toFixed(2),bucks:c.bucks,does:c.does,harvest:c.harvest,note:"Imported from past "+c.src,moon:+moonPhase(c.date).toFixed(2)};
+    try{ const pin=iPins[skey(stand)]||avgPin(); if(pin) o.wx=await wxFetch(pin.lat,pin.lng,c.date,+st.slice(0,2)); }catch(e){}
+    try{ const r=await fetch(DBROOT+"/hunts.json",{method:"POST",body:JSON.stringify(o)}); if(r.ok) n++; }catch(e){}
+  }
+  await loadHunts();
+  $("impOut").innerHTML=`<div class="msg ok" style="display:block">✓ Imported ${n} hunt${n===1?"":"s"}. Check the charts and Past Hunts.</div>`;
+}
+
+initInsights();
 
 /* ===== START ===== */
 $("date").value=todayStr();
